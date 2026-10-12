@@ -1,4 +1,7 @@
 {
-  "name": "biribiri-carta",
-  "pages_build_output_dir": "."
+  "name": "biri-biri",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "."
+  }
 }

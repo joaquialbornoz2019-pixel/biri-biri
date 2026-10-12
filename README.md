@@ -11,8 +11,8 @@ Carta digital interactiva, sitio estático sin build. Se abre `index.html` y lis
 ## Probar en local
     npx serve .
 
-## Publicar en Cloudflare Pages
+## Publicar en Cloudflare (Workers con assets estáticos)
     npx wrangler login
-    npx wrangler pages deploy . --project-name=biribiri-carta
+    npx wrangler deploy
 
-Después, en Cloudflare: Workers & Pages > biribiri-carta > Custom domains.
+Después, en Cloudflare: Workers & Pages > biri-biri > Domains & Routes.

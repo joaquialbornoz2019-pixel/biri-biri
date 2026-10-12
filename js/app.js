@@ -164,11 +164,13 @@ document.getElementById('poco-list').addEventListener('click', e => {
 (function () {
   const sec = document.getElementById('bebidas');
   const cv = document.getElementById('liq');
-  const ctx = cv.getContext('2d');
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
   const pingu = document.getElementById('pingu');
   const spout = document.getElementById('spout');
   const COLS = ['#7b1e3a', '#c0782a', '#2a1710', '#b9c45a', '#c63a2c', '#e3b04b', '#4a2c1d', '#d9d6a0'];
-  const S = 3;
+  const S = 6;            // px de pantalla por px del canvas (baja resolución = rápido)
+  const K = 3 / S;        // escala de radios respecto del diseño original
+  const rgbOf = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   let W = 0, H = 0, blobs = [], running = false, t = 0, poured = false, lastY = scrollY, last = null;
 
   function size() {
@@ -177,8 +179,8 @@ document.getElementById('poco-list').addEventListener('click', e => {
     W = Math.max(60, Math.round(w / S)); H = Math.max(100, Math.round(h / S));
     cv.width = W; cv.height = H;
     if (!blobs.length) {
-      const N = Math.max(16, Math.min(46, Math.round(W * H * .42 / (Math.PI * 13 * 13))));
-      for (let i = 0; i < N; i++) blobs.push({ x: W / 2, y: -60, vx: 0, vy: 0, r: 9 + Math.random() * 9, c: COLS[i % COLS.length], on: false });
+      const N = Math.max(16, Math.min(46, Math.round(W * H * .42 / (Math.PI * 13 * K * 13 * K))));
+      for (let i = 0; i < N; i++) blobs.push({ x: W / 2, y: -60, vx: 0, vy: 0, r: (9 + Math.random() * 9) * K, c: COLS[i % COLS.length], rgb: rgbOf(COLS[i % COLS.length]), on: false });
     }
     blobs.forEach(b => { b.x = Math.min(b.x, W); b.y = Math.min(b.y, H); });
   }
@@ -188,7 +190,7 @@ document.getElementById('poco-list').addEventListener('click', e => {
     const sl = Math.sin(t * .012) * .03;
     const on = blobs.filter(b => b.on);
     for (const b of on) {
-      b.vy += .32; b.vx += sl; b.vx *= .985; b.vy *= .985;
+      b.vy += .32 * K; b.vx += sl * K; b.vx *= .985; b.vy *= .985;
       b.x += b.vx; b.y += b.vy;
       const m = b.r * .6;
       if (b.x < m) { b.x = m; b.vx *= -.3; } else if (b.x > W - m) { b.x = W - m; b.vx *= -.3; }
@@ -206,20 +208,41 @@ document.getElementById('poco-list').addEventListener('click', e => {
   }
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    for (const b of blobs) if (b.on) { ctx.fillStyle = b.c; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 6.2832); ctx.fill(); }
+    for (const b of blobs) {
+      if (!b.on) continue;
+      const R = b.r * 1.9, [r, g, bl] = b.rgb;
+      const gr = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, R);
+      gr.addColorStop(0, `rgba(${r},${g},${bl},1)`);
+      gr.addColorStop(1, `rgba(${r},${g},${bl},0)`);
+      ctx.fillStyle = gr;
+      ctx.fillRect(b.x - R, b.y - R, R * 2, R * 2);
+    }
+    // umbral del alfa: junta las manchas en una sola masa de líquido
+    const img = ctx.getImageData(0, 0, W, H), d = img.data;
+    for (let i = 3; i < d.length; i += 4) {
+      const a = d[i];
+      if (a === 0) continue;
+      const t = (a - 105) / 30;
+      d[i] = t <= 0 ? 0 : t >= 1 ? 255 : t * 255;
+    }
+    ctx.putImageData(img, 0, 0);
   }
   let raf = 0;
-  function loop() {
+  let prev = 0;
+  function loop(ts) {
     if (!running) return;
-    step(); draw();
+    const dt = prev ? ts - prev : 16.7; prev = ts;
+    step();
+    if (dt > 24) step();   // si el celular va lento, adelanta la física en vez de verse en cámara lenta
+    draw();
     raf = requestAnimationFrame(loop);
   }
-  function start() { if (!running && !RM) { running = true; raf = requestAnimationFrame(loop); } }
+  function start() { if (!running && !RM) { running = true; prev = 0; raf = requestAnimationFrame(loop); } }
   function stop() { running = false; cancelAnimationFrame(raf); }
 
   function pourAt(sx, sy) {
     blobs.forEach((b, i) => setTimeout(() => {
-      b.on = true; b.x = sx + (Math.random() - .5) * 6; b.y = sy; b.vx = (Math.random() - .5) * 1.2; b.vy = 1 + Math.random();
+      b.on = true; b.x = sx + (Math.random() - .5) * 6; b.y = sy; b.vx = (Math.random() - .5) * 1.2 * K; b.vy = (1 + Math.random()) * K;
     }, i * 70));
   }
   function settleNow() {
@@ -253,7 +276,7 @@ document.getElementById('poco-list').addEventListener('click', e => {
   sec.addEventListener('pointermove', ev => {
     if (!poured) return;
     const [x, y] = toCanvas(ev);
-    if (lp) force(x, y, Math.max(-6, Math.min(6, x - lp[0])), Math.max(-6, Math.min(6, y - lp[1])), 30);
+    if (lp) force(x, y, Math.max(-3, Math.min(3, x - lp[0])), Math.max(-3, Math.min(3, y - lp[1])), 15);
     lp = [x, y];
   });
   sec.addEventListener('pointerleave', () => { lp = null; });
@@ -263,14 +286,14 @@ document.getElementById('poco-list').addEventListener('click', e => {
     for (const b of blobs) {
       if (!b.on) continue;
       const dx = b.x - x, dy = b.y - y, d = Math.hypot(dx, dy);
-      if (d < 46 && d > .01) { const k = 1 - d / 46; b.vx += dx / d * k * 4; b.vy -= 2 + k * 4; }
+      if (d < 23 && d > .01) { const k = 1 - d / 23; b.vx += dx / d * k * 2; b.vy -= 1 + k * 2; }
     }
   });
 
   function tint(color) {
     if (!poured) return;
     const top = blobs.filter(b => b.on).sort((a, b) => a.y - b.y).slice(0, 9);
-    top.forEach(b => { b.c = color; b.vy -= 3 + Math.random() * 2; b.vx += (Math.random() - .5) * 2; });
+    top.forEach(b => { b.c = color; b.rgb = rgbOf(color); b.vy -= 3 + Math.random() * 2; b.vx += (Math.random() - .5) * 2; });
     if (RM) { for (let i = 0; i < 40; i++) step(); }
     draw();
   }
@@ -286,7 +309,7 @@ document.getElementById('poco-list').addEventListener('click', e => {
     if (!poured && sec.getBoundingClientRect().top <= innerHeight * .05) trigger();
     if (poured && !RM) {
       const m = Math.min(Math.abs(dy), 40);
-      if (m > 2) for (const b of blobs) if (b.on) { b.vx += (Math.random() - .5) * m * .05; b.vy -= Math.random() * m * .05; }
+      if (m > 2) for (const b of blobs) if (b.on) { b.vx += (Math.random() - .5) * m * .05 * K; b.vy -= Math.random() * m * .05 * K; }
     }
   }
   addEventListener('scroll', onScroll, { passive: true });

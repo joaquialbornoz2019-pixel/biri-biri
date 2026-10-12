@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#16110e">
+<meta name="description" content="Prototipo de carta digital interactiva para biribiri.">
+<meta property="og:title" content="Carta Biribiri">
+<meta property="og:description" content="Prototipo de carta digital interactiva.">
+<title>Carta Biribiri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="wob" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="goo" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9"/>
+      <feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/>
+    </filter>
+  </defs>
+</svg>
+
+<header class="hero" id="top">
+  <div class="stage" id="stage">
+    <div class="ph dark"></div>
+    <div class="ph lit l1"></div>
+    <div class="ph lit l2"></div>
+    <div class="flame f1"></div>
+    <div class="flame f2"></div>
+    <button class="wick f1" type="button" id="w1" aria-label="Soplar la vela izquierda"></button>
+    <button class="wick f2" type="button" id="w2" aria-label="Soplar la vela derecha"></button>
+  </div>
+  <div class="shade"></div>
+  <div class="hero-top">biribiri · C. de Belén, 6 · Madrid</div>
+  <div class="hero-body" id="hbody">
+    <h1 class="logo">biribiri</h1>
+    <p class="tagline">fuerte al medio</p>
+    <p class="sub">sin pretensiones</p>
+  </div>
+  <div class="scroll-hint">la carta ↓</div>
+</header>
+
+<main class="carta" id="carta">
+  <div class="bar">
+    <div class="col">
+      <span class="lbl">filtrar</span>
+      <button class="chip" type="button" data-t="veg" aria-pressed="false">veggie</button>
+      <button class="chip" type="button" data-t="sg" aria-pressed="false">sin gluten</button>
+      <span class="count" id="count" aria-live="polite"></span>
+      <span class="demo">demo · etiquetas de ejemplo, no son info real de alérgenos</span>
+    </div>
+  </div>
+
+  <section class="mucho col" aria-labelledby="t-mucho">
+    <div class="sec-title"><h2 class="title-script" id="t-mucho">mucho biribiri</h2></div>
+    <p class="hint">tocá un plato</p>
+    <div id="mucho-list"></div>
+  </section>
+
+  <section class="poco col" aria-labelledby="t-poco">
+    <p class="divider" aria-hidden="true">· · ·</p>
+    <h2 class="swap" id="t-poco"><span class="cell"><span class="old" aria-hidden="true">mucho</span><span class="new">poco</span></span><span>biribiri</span></h2>
+    <p class="hint">tocá un dibujo y se vuelve a trazar</p>
+    <ul class="plist" id="poco-list"></ul>
+  </section>
+</main>
+
+<section class="bebidas" id="bebidas" aria-labelledby="t-beb">
+  <div class="liquid" aria-hidden="true"><canvas id="liq"></canvas></div>
+  <div class="bcontent">
+    <div class="bhead col">
+      <h2 class="title-script" id="t-beb">bebidas biribiri</h2>
+      <div class="pingu" id="pingu" aria-hidden="true">
+        <svg viewBox="0 0 100 140">
+          <g filter="url(#wob)">
+            <path d="M36 130 Q16 114 20 82 Q22 58 38 46 Q36 28 50 22 L70 24 L80 31 Q66 34 62 44 Q80 58 80 86 Q82 114 62 130 Z"/>
+            <path d="M22 76 Q2 78 4 100 Q6 114 26 108"/>
+            <path d="M46 72 Q38 100 48 122"/>
+            <path d="M60 66 Q72 84 64 106"/>
+            <path class="eye" d="M54 33 l.1 0"/>
+          </g>
+        </svg>
+        <i class="spout" id="spout"></i>
+      </div>
+      <p class="bnote">tocá, arrastrá o scrolleá para revolver</p>
+    </div>
+
+    <div class="col" id="drinks"></div>
+
+    <footer class="foot col">
+      <b>biribiri</b>
+      <p>C. de Belén, 6 · Justicia, Madrid</p>
+      <p>M, X, J 19.00 a 00.30 · V 17.00 a 1.00</p>
+      <p>prototipo de carta digital</p>
+    </footer>
+  </div>
+</section>
+
+<script src="js/app.js"></script>
+</body>
+</html>
